@@ -32,6 +32,9 @@ IR+LSTM starts with a convolutional layer for dimension reduction such that the 
 ## DNAcycP required packages
 
 TODO:
+
+RECOMMEND PYTHON3.11
+
 * `bio==1.3.3`
 * `tensorflow==2.7.0`
 * `keras==2.7.0`

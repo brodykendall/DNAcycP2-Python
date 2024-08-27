@@ -3,7 +3,7 @@ from setuptools import setup
 setup(name='dnacycpv2',
       packages=['dnacycpv2'],
       version='0.0.1dev1',
-      python_requires='>=3.9.0,<3.12',
+      python_requires='>3.9.0,<3.12',
       install_requires=[
       # 'numpy==1.21.5',
       'numpy==1.26.1',
