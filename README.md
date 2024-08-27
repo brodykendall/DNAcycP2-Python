@@ -18,7 +18,7 @@ TODO:
 ## Available format of DNAcycP
 
 TODO:
-DANcycP is available in two formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, and a standalone Python package available for free download from https://github.com/jipingw/DNAcycP. 
+DNAcycP is available in two formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, and a standalone Python package available for free download from https://github.com/jipingw/DNAcycP. 
 
 
 ## Architecture of DNAcycP
