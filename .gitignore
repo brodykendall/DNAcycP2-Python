@@ -1,0 +1,8 @@
+.Rproj.user/*
+.Rhistory
+create_package.R
+build/*
+dnacycpv2.egg-info/*
+env/*
+.DS_Store*
+DNAcycPv2-main.Rproj
