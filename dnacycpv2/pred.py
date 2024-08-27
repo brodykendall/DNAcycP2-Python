@@ -5,12 +5,12 @@ from numpy import array
 from Bio import SeqIO
 
 network_final = keras.models.load_model("irlstm")
-detrend_int = 0.007837813347578049
-detrend_slope = 1.0144166946411133
-# normal_mean = -0.18574825868055558
-# normal_std = 0.4879013326394626
-normal_mean = 0
-normal_std = 1
+detrend_int = 0.001641373848542571
+detrend_slope = 1.0158132314682007
+# Mean and stdev of smoothed C0 for Tiling library:
+# (calculated from/on the scale of normalized Cn values)
+normal_mean = -0.011196041799376931
+normal_std = 0.651684644408004
 
 def dnaOneHot(sequence):
     seq_array = array(list(sequence))

@@ -89,6 +89,9 @@ where
 ```bash
 dnacycpv2-cli -f ./data/raw/ex1.fasta ./data/raw/ex1
 ```
+
+TODO: update the meaning of normalized/unnormalized: normalized should be true normalized. Unnormalized is on the scale of normalized Cn values (same as smoothC0)
+
 The `-f` option specifies that the input file named "ex1.fasta" is in fasta format. 
 The `./data/raw/ex1.fasta` is the sequence file path and name, and `./data/raw/ex1` specifies the output file will be saved in the directory `./data/raw` with file name initialized with `ex1`.
 For example, `ex1.fasta` contains two sequences named ">seq1" and ">myseq2" respectively.
