@@ -1,24 +1,26 @@
 DNAcycP Python package 
 ================
 
-**Maintainer**: Ji-Ping Wang, \<<jzwang@northwestern.edu>\>; Brody Kendall \<<curtis.kendall2025@u.northwestern.edu>> Keren Li, \<<keren.li@northwestern.edu>\>
+**Maintainer**: Ji-Ping Wang, \<<jzwang@northwestern.edu>\>; Brody Kendall \<<curtiskendall2025@u.northwestern.edu>> Keren Li, \<<keren.li@northwestern.edu>\>
 
 **Licence**: GPLv3
 
 **Cite DNAcycP package**:
 
-TODO:
+TODO: Update citation when applicable
+
 Li, K., Carroll, M., Vafabakhsh, R., Wang, X.A. and Wang, J.-P., DNAcycP: A Deep Learning Tool for DNA Cyclizability Prediction, *Nucleic Acids Research*, 2021
 
 ## What is DNAcycP?
 
-TODO:
-**DNAcycP**, short for **DNA** **cyc**lizablity **P**rediction, is a Python package for accurate predict of DNA intrinsic cyclizablity score. It was built upon a deep learning architecture with a hybrid of Inception and Residual network structure and an LSTM layer. DNAcycP was trained based on loop-seq data from Basu et al 2021 (see below). The predicted score, termed **C-score** achieves high accuracy compared to the experimentally measured cyclizablity score by loop-seq assay.
+**DNAcycP**, short for **DNA** **cyc**lizablity **P**rediction, is a Python package for accurate predict of DNA intrinsic cyclizablity score. It was built upon a deep learning architecture with a hybrid of Inception and Residual network structure and an LSTM layer. The original DNAcycP was trained based on loop-seq data from Basu et al 2021 (see below). An updated version (DNAcycP2) was trained based on smoothed predictions of this loop-seq data. The predicted score (for either DNAcycP or DNAcycP2), termed **C-score** achieves high accuracy compared to the experimentally measured cyclizablity score by loop-seq assay.
 
 ## Available format of DNAcycP
 
-TODO:
-DNAcycP is available in two formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, and a standalone Python package available for free download from https://github.com/jipingw/DNAcycP. 
+TODO: update reference to R package
+TODO: update web server
+
+DNAcycP is available in three formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, a standalone Python package available for free download from https://github.com/jipingw/DNAcycP, and an R package (coming soon).
 
 
 ## Architecture of DNAcycP
@@ -31,33 +33,33 @@ IR+LSTM starts with a convolutional layer for dimension reduction such that the 
 
 ## DNAcycP required packages
 
-TODO:
+*The recommended python version is 3.11*
 
-RECOMMEND PYTHON3.11
-
-* `bio==1.3.3`
-* `tensorflow==2.7.0`
-* `keras==2.7.0`
-* `pandas==1.3.5`
-* `numpy==1.21.5`
+* `numpy==1.26.1`
+* `pandas==2.1.2`
+* `tensorflow==2.14.0`
+* `keras==2.14.0`
+* `bio==1.7.1`
 * `docopt==0.6.2`
 
 
 ## Installation
 
-**DNAcycP** Python package requires specific versions of dependencies. We recommend to install and run **DNAcycP** in a virtual environment. For example, suppose the downloaded DNAcycP package is unpacked as a folder `dnacycpv2-main`. We can install DNAcycP in a virtual environment as below:
+**DNAcycP** Python package requires specific versions of dependencies. We recommend to install and run **DNAcycP** in a virtual environment. For example, suppose the downloaded DNAcycP package is unpacked as a folder `dnacycp-main`. We can install DNAcycP in a virtual environment as below:
 
 ```bash
-cd dnacycpv2-main
+cd dnacycp-main
 python3 -m venv env
 source env/bin/activate test
 pip install -e .
 ```
 
-Run `dnacycpv2-cli ` to see whether it is installed properly.
+Run `dnacycp-cli ` to see whether it is installed properly.
+
+*Note: You may need to deactivate then re-activate the virtual environment prior to this step (see below)*
 
 ```bash
-dnacycpv2-cli 
+dnacycp-cli 
 ```
 
 Once done with DNAcycP for prediction, you can close the virtual environment by using:
@@ -67,7 +69,7 @@ deactivate
 
 Once the virtual environment is deactivated, you need to re-activate it before you run another session of prediciotn as follows:
 ```bash
-cd dnacycpv2-main
+cd dnacycp-main
 source env/bin/activate test
 ```
 
@@ -75,53 +77,63 @@ source env/bin/activate test
 
 DNAcycP supports the input sequence in two formats: FASTA format (with sequence name line beginning with “>”) or plain TXT format. Unlike in the web server version where only one sequence is allowed in input for prediction, the Python package allows multiple sequences in the same input file. In particular for the TXT format, each line (can be of different length) in the file is regarded as one input sequence for prediction. 
 
-The main funciton in DNAcycP is `dnacycv2p-cli`, which can be called as follows:
+The main funciton in DNAcycP is `dnacycp-cli`, which can be called as follows:
 ```bash
-dnacycpv2-cli -f/-t <inputfile> <basename>
+dnacycp-cli -f/-t (-s) <inputfile> <basename>
 ```
 where 
   * `-f/-t`: indicates the input file name in FASTA or TXT format respectively; either one must be specified.
+  * `-s`: (optional) indicates the updated model trained on smoothed data (DNAcycP2) should be used. If `-s` is omitted, the model trained on the original data (DNAcycP) will be used.
   * `<inputfile>`: is the name of the intput file;
   * `<basename>`: is the name base for the output file.
 
 ### Example 1:
 
 ```bash
-dnacycpv2-cli -f ./data/raw/ex1.fasta ./data/raw/ex1
+dnacycp-cli -f -s ./data/raw/ex1.fasta ./data/raw/ex1_smooth
+dnacycp-cli -f ./data/raw/ex1.fasta ./data/raw/ex1_original
 ```
 
-TODO: update the meaning of normalized/unnormalized: normalized should be true normalized. Unnormalized is on the scale of normalized Cn values (same as smoothC0)
-
 The `-f` option specifies that the input file named "ex1.fasta" is in fasta format. 
+
+The `-s` option specifies that the DNAcycP2 model should be used for prediction, while omitting the `-s` argument specifies that the original DNAcycP model should be used for prediction.
+
 The `./data/raw/ex1.fasta` is the sequence file path and name, and `./data/raw/ex1` specifies the output file will be saved in the directory `./data/raw` with file name initialized with `ex1`.
-For example, `ex1.fasta` contains two sequences named ">seq1" and ">myseq2" respectively.
-The output file will be named as "ex1_cycle_seq1.txt", "ex1_cycle_myseq2.txt"for the first and second sequences respectively. Each file contains three columns: `position`, `C_score_norm`, `C_score_unnorm`. The `C_score_norm` is the predicted C-score from the model trained based on the standardized loop-seq score of the tiling library of Basu et al 2021 (i.e. 0 mean unit variance). The `C_score_unnorm` is the predicted C-score recovered to the original scale of loop-seq score in the tiling library data from Basu et el 2021. The standardized loop-seq score provides two advantages. As loop-seq may be subject to a library-specific constant, standardized C-score is defined with a unified baseline as yeast genome (i.e. 0 mean in yeast genome). Secondly, the C-score provides statisitcal significance indicator, i.e. a C-score of 1.96 indicates 97.5% in the distribution.
+For example, `ex1.fasta` contains two sequences with IDs "1" and "2" respectively.
+The output files containing DNAcycP2 predictions will be named as "ex1_smooth_cycle_1.txt" and "ex1_smooth_cycle_2.txt" for the first and second sequences respectively, while the output files containing DNAcycP predictions will be named as "ex1_original_cycle_1.txt" and "ex1_original_cycle_2.txt".
+
+ Each output file contains three columns: `position`, `C_score_norm`, `C_score_unnorm`. The `C_score_norm` is the predicted C-score from the model trained based on the standardized loop-seq score (in the case of DNAcycP) or the standardized smoothed intrinsic cyclizability estimate (in the case of DNAcycP2) of the tiling library of Basu et al 2021 (i.e. 0 mean unit variance). When predictions are made using the original DNAcycP, the `C_score_unnorm` is the predicted C-score recovered to the original scale of loop-seq score in the tiling library data from Basu et el 2021. When predictions are made using the updated DNAcycP2 (`-s`), the `C_score_unnorm` is the predicted C-score recovered to the scale of standardized raw cyclizability scores of the tiling library data. The standardized loop-seq score provides two advantages. As loop-seq may be subject to a library-specific constant, standardized C-score is defined with a unified baseline as yeast genome (i.e. 0 mean in yeast genome). Secondly, the C-score provides statisitcal significance indicator, i.e. a C-score of 1.96 indicates 97.5% in the distribution.
 
 
 ### Example 2:
 
 ```bash
-dnacycpv2-cli -t ./data/raw/ex2.txt ./data/raw/ex2
+dnacycp-cli -t -s ./data/raw/ex2.txt ./data/raw/ex2_smooth
+dnacycp-cli -t ./data/raw/ex2.txt ./data/raw/ex2_original
 ```
 With `-t` option, the input file is regarded as in TXT format, each line representing a sequence without sequence name line that begins with ">".
+
+The `-s` option again specifies that the DNAcycP2 model should be used for prediction, while omitting the `-s` argument specifies that the original DNAcycP model should be used for prediction.
+
 The predicted C-scores will be saved into two files, one with `_unnorm.txt` and the other with `_norm.txt` for unnormalized and normalized C-score, with C-scores in each line corresponding to the sequence in the input file in the same order.
 
 For any input sequence, DNAcycP predicts the C-score for every 50 bp. Regardless of the input sequence format the first C-score in the output file corresponds to the sequence from position 1-50, second for 2-51 and so forth.
 
 ### Run prediction within Python interactive session
 
-TODO:
-
 ```python
 from dnacycp import cycle_fasta, cycle_txt
-cycle_fasta("data/raw/ex1.fasta","example1")
-cycle_txt("data/raw/ex2.txt","example2")
+# Smooth prediction using DNAcycP2:
+cycle_fasta("data/raw/ex1.fasta","ex1_smooth",smooth=True)
+cycle_txt("data/raw/ex2.txt","ex2_smooth",smooth=True)
+
+# Original prediction using DNAcycP:
+cycle_fasta("data/raw/ex1.fasta","ex1_original",smooth=False)
+cycle_txt("data/raw/ex2.txt","ex2_original",smooth=False)
 ```
 
 
 ## Other References
-
-TODO:
 
 * Basu, A., Bobrovnikov, D.G., Qureshi, Z., Kayikcioglu, T., Ngo, T.T.M., Ranjan, A., Eustermann, S., Cieza, B., Morgan, M.T., Hejna, M. et al. (2021) Measuring DNA mechanics on the genome scale. Nature, 589, 462-467.
 
