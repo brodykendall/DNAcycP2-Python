@@ -79,7 +79,12 @@ DNAcycP supports the input sequence in two formats: FASTA format (with sequence 
 
 The main funciton in DNAcycP is `dnacycp-cli`, which can be called as follows:
 ```bash
-dnacycp-cli -f/-t (-s) <inputfile> <basename>
+dnacycp-cli -f/-t -s <inputfile> <basename>
+```
+
+or:
+```bash
+dnacycp-cli -f/-t <inputfile> <basename>
 ```
 where 
   * `-f/-t`: indicates the input file name in FASTA or TXT format respectively; either one must be specified.
@@ -123,6 +128,7 @@ For any input sequence, DNAcycP predicts the C-score for every 50 bp. Regardless
 
 ```python
 from dnacycp import cycle_fasta, cycle_txt
+
 # Smooth prediction using DNAcycP2:
 cycle_fasta("data/raw/ex1.fasta","ex1_smooth",smooth=True)
 cycle_txt("data/raw/ex2.txt","ex2_smooth",smooth=True)
