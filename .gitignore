@@ -1,8 +1,5 @@
-.Rproj.user/*
-.Rhistory
-create_package.R
 build/*
-dnacycpv2.egg-info/*
+dnacycp.egg-info/*
 env/*
 .DS_Store*
-DNAcycPv2-main.Rproj
+dnacycp/__pycache__/*

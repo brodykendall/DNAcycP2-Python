@@ -4,13 +4,19 @@ import numpy as np
 from numpy import array
 from Bio import SeqIO
 
-network_final = keras.models.load_model("irlstm")
-detrend_int = 0.001641373848542571
-detrend_slope = 1.0158132314682007
+network_final_original = keras.models.load_model("irlstm")
+detrend_int_original = 0.029905550181865692
+detrend_slope_original = 0.973293125629425
+normal_mean_original = -0.18574825868055558
+normal_std_original = 0.4879013326394626
+
+network_final_smooth = keras.models.load_model("irlstm_smooth")
+detrend_int_smooth = 0.001641373848542571
+detrend_slope_smooth = 1.0158132314682007
 # Mean and stdev of smoothed C0 for Tiling library:
 # (calculated from/on the scale of normalized Cn values)
-normal_mean = -0.011196041799376931
-normal_std = 0.651684644408004
+normal_mean_smooth = -0.011196041799376931
+normal_std_smooth = 0.651684644408004
 
 def dnaOneHot(sequence):
     seq_array = array(list(sequence))
@@ -23,8 +29,37 @@ def dnaOneHot(sequence):
         onehot_encoded_seq.append(onehot_encoded[0:4])
     return onehot_encoded_seq
 
-def cycle_fasta(inputfile, outputbase):
+def cycle_fasta(inputfile:str, outputbase:str, smooth:bool=True):
+    """
+    Make predictions for a given FASTA file.
+
+    Parameters
+    ----------
+    inputfile : str
+        The path to the FASTA file to predict.
+    outputbase : str
+        The base name of the output files.
+    smooth : bool, optional
+        Whether to use the smoothed model or not. The default is True.
+        smooth=True corresponds to DNAcycP2, smooth=False corresponds to DNAcycP
+
+    Notes
+    -----
+    The output files will be named as `<outputbase>_cycle_<chrom>.txt`, where `<chrom>` is the chromosome ID from the FASTA file.
+    """
     genome_file = SeqIO.parse(open(inputfile),'fasta')
+
+    network_final = network_final_smooth if smooth else network_final_original
+    detrend_int = detrend_int_smooth if smooth else detrend_int_original
+    detrend_slope = detrend_slope_smooth if smooth else detrend_slope_original
+    normal_mean = normal_mean_smooth if smooth else normal_mean_original
+    normal_std = normal_std_smooth if smooth else normal_std_original
+
+    if smooth:
+        print(f"Making smooth predictions (DNAcycP2)\n\n")
+    else:
+        print(f"Making predictions (DNAcycP)\n\n")
+
     for fasta in genome_file:
         chrom = fasta.id
         genome_sequence = str(fasta.seq)
@@ -62,7 +97,35 @@ def cycle_fasta(inputfile, outputbase):
         fitall.to_csv(outputbase+"_cycle_"+chrom+".txt", index = False)
         print("Output file: "+outputbase+"_cycle_"+chrom+".txt")
 
-def cycle_txt(inputfile, outputbase):
+def cycle_txt(inputfile:str, outputbase:str, smooth:bool=True):
+    """
+    Make predictions for a given TXT file.
+
+    Parameters
+    ----------
+    inputfile : str
+        The path to the TXT file to predict.
+    outputbase : str
+        The base name of the output files.
+    smooth : bool, optional
+        Whether to use the smoothed model or not. The default is True.
+        smooth=True corresponds to DNAcycP2, smooth=False corresponds to DNAcycP
+
+    Notes
+    -----
+    The output files will be named as `<outputbase>_cycle_norm.txt` and `<outputbase>_cycle_unnorm.txt`, where `<outputbase>` is the base name given as an argument.
+    """
+    network_final = network_final_smooth if smooth else network_final_original
+    detrend_int = detrend_int_smooth if smooth else detrend_int_original
+    detrend_slope = detrend_slope_smooth if smooth else detrend_slope_original
+    normal_mean = normal_mean_smooth if smooth else normal_mean_original
+    normal_std = normal_std_smooth if smooth else normal_std_original
+
+    if smooth:
+        print(f"Making smooth predictions (DNAcycP2)\n\n")
+    else:
+        print(f"Making predictions (DNAcycP)\n\n")
+
     with open(inputfile) as f:
             input_sequence = f.readlines()
     output_cycle = []

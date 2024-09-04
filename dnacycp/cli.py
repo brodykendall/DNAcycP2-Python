@@ -1,9 +1,11 @@
 """DNAcycP - DNA Sequence Cyclizability Prediction
 
 Usage:
-    dnacycpv2-cli -f <inputfile> <basename>
-    dnacycpv2-cli -t <inputfile> <basename>
-    dnacycpv2-cli (-h | --help)
+    dnacycp-cli -f <inputfile> <basename>
+    dnacycp-cli -f -s <inputfile> <basename>
+    dnacycp-cli -t <inputfile> <basename>
+    dnacycp-cli -t -s <inputfile> <basename>
+    dnacycp-cli (-h | --help)
     
 Arguments:
     <inputfile> Input file name.
@@ -13,10 +15,11 @@ Options:
     -h --help   Show this screen.
     -f          FASTA mode.
     -t          TXT mode.
+    -s          SMOOTH mode.
     
 """
 from docopt import docopt
-from dnacycpv2 import cycle_fasta, cycle_txt
+from dnacycp import cycle_fasta, cycle_txt
 import keras
 import pandas as pd
 import numpy as np
@@ -27,12 +30,16 @@ def main():
     arguments = docopt(__doc__)
     print("Input file: "+arguments['<inputfile>'])
 
+    smooth = True if arguments['-s'] else False
+
     if arguments['-f']:
         cycle_fasta(arguments['<inputfile>'],
-            arguments['<basename>'])
+                    arguments['<basename>'],
+                    smooth)
     elif arguments['-t']:
         cycle_txt(arguments['<inputfile>'],
-            arguments['<basename>'])
+                  arguments['<basename>'],
+                  smooth)
             
 if __name__ == "__main__":
     main()

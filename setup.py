@@ -1,7 +1,7 @@
 from setuptools import setup
 
-setup(name='dnacycpv2',
-      packages=['dnacycpv2'],
+setup(name='dnacycp',
+      packages=['dnacycp'],
       version='0.0.1dev1',
       python_requires='>3.9.0,<3.12',
       install_requires=[
@@ -13,6 +13,6 @@ setup(name='dnacycpv2',
       'docopt==0.6.2'
       ],
       entry_points={
-            'console_scripts': ['dnacycpv2-cli=dnacycpv2.cli:main']
+            'console_scripts': ['dnacycp-cli=dnacycp.cli:main']
       }
       )
