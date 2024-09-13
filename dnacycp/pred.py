@@ -128,29 +128,66 @@ def cycle_txt(inputfile:str, outputbase:str, smooth:bool=True):
 
     with open(inputfile) as f:
             input_sequence = f.readlines()
-    output_cycle = []
+    X = []
+    all50 = True
+    print("Reading sequences...")
     for loop_sequence in input_sequence:
-        loop_sequence =loop_sequence.rstrip()
-        l = len(loop_sequence)
-        onehot_loop = dnaOneHot(loop_sequence)
-        onehot_loop = array(onehot_loop)
-        onehot_loop = onehot_loop.reshape((l,4,1))
-        onehot_loops = []
-        for i in range(l-49):
-            onehot_loops.append(onehot_loop[i:i+50])
-        onehot_loops = array(onehot_loops)
-        onehot_loops_reverse = np.flip(onehot_loops,[1,2])
-        cycle_local = network_final.predict(onehot_loops)
-        cycle_local_reverse = network_final.predict(onehot_loops_reverse)
-        cycle_local = detrend_int + (cycle_local + cycle_local_reverse) * detrend_slope/2
-        cycle_local = cycle_local.reshape(cycle_local.shape[0])
-        output_cycle.append(cycle_local)
+        loop_sequence = loop_sequence.rstrip()
+        if len(loop_sequence) != 50:
+            all50=False
+        X.append(dnaOneHot(loop_sequence))
+    if all50:
+        print("Predicting cyclizability...")
+        X = array(X)
+        X = X.reshape((X.shape[0],50,4,1))
+        X_reverse = np.flip(X,[1,2])
+
+        model_pred = network_final.predict(X)
+        model_pred_reverse = network_final.predict(X_reverse)
+
+        model_pred = detrend_int + (model_pred + model_pred_reverse) * detrend_slope/2
+        output_cycle = model_pred.flatten()
+        output_cycle2 = np.array([item * normal_std + normal_mean for item in output_cycle])
+        output_cycle = list(output_cycle)
+        output_cycle2 = list(output_cycle2)
+    else:
+        print("Not all sequences are length 50, predicting every subsequence...")
+        output_cycle = []
+        lenX = len(X)
+        for j, onehot_loop in enumerate(X):
+            l = len(onehot_loop)
+            onehot_loop = array(onehot_loop)
+            onehot_loop = onehot_loop.reshape((l,4,1))
+            onehot_loops = []
+            for i in range(l-49):
+                onehot_loops.append(onehot_loop[i:i+50])
+            onehot_loops = array(onehot_loops)
+            onehot_loops_reverse = np.flip(onehot_loops,[1,2])
+            if l > 1000:
+                # Provide status bar for long sequences:
+                cycle_local = network_final.predict(onehot_loops)
+                cycle_local_reverse = network_final.predict(onehot_loops_reverse)
+            else:
+                # No status bar for short sequences (verbose=0):
+                cycle_local = network_final.predict(onehot_loops, verbose=0)
+                cycle_local_reverse = network_final.predict(onehot_loops_reverse, verbose=0)
+            cycle_local = detrend_int + (cycle_local + cycle_local_reverse) * detrend_slope/2
+            cycle_local = cycle_local.reshape(cycle_local.shape[0])
+            output_cycle.append(cycle_local)
+            if j%10==9:
+                print(f"Completed {j+1} out of {lenX} total sequences")
+        output_cycle2 = [item * normal_std + normal_mean for item in output_cycle]
     with open(outputbase+"_cycle_norm.txt", "w") as file:
         for row in output_cycle:
-            s = " ".join(map(str, row))
+            if isinstance(row, (np.floating, float)):
+                s = str(row)
+            else:
+                s = " ".join(map(str, row))
             file.write(s+'\n')
-    output_cycle2 = [item * normal_std + normal_mean for item in output_cycle]
     with open(outputbase+"_cycle_unnorm.txt", "w") as file:
         for row in output_cycle2:
-            s = " ".join(map(str, row))
+            if isinstance(row, (np.floating, float)):
+                s = str(row)
+            else:
+                s = " ".join(map(str, row))
             file.write(s+'\n')
