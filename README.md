@@ -90,7 +90,7 @@ where
   * `-s`: (optional) indicates the updated model trained on smoothed data (DNAcycP2) should be used. If `-s` is omitted, the model trained on the original data (DNAcycP) will be used.
   * `<inputfile>`: is the name of the intput file;
   * `<basename>`: is the name base for the output file.
-  * `-L <chunk_length>`: is the length of sequence that a given core will be predicting on at any given time (default 100,000; only applicable with `-f`)
+  * `-L <chunk_length>`: is the length of sequence that a given core will be predicting on at any given time (default 100000; only applicable with `-f`)
   * `-n <num_cores>`: is the number of cores to be used in parallel (default 1; only applicable with `-f`)
 
 ### Example 1:
@@ -135,11 +135,11 @@ For any input sequence, DNAcycP predicts the C-score for every 50 bp. Regardless
 from dnacycp import cycle_fasta, cycle_txt
 
 # Smooth prediction using DNAcycP2:
-cycle_fasta("data/raw/ex1.fasta","ex1_smooth",smooth=True)
+cycle_fasta("data/raw/ex1.fasta","ex1_smooth", smooth=True, chunk_size=1000, num_threads=2)
 cycle_txt("data/raw/ex2.txt","ex2_smooth",smooth=True)
 
 # Original prediction using DNAcycP:
-cycle_fasta("data/raw/ex1.fasta","ex1_original",smooth=False)
+cycle_fasta("data/raw/ex1.fasta","ex1_original",smooth=False, chunk_size=1000, num_threads=2)
 cycle_txt("data/raw/ex2.txt","ex2_original",smooth=False)
 ```
 
