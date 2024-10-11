@@ -3,6 +3,10 @@ import pandas as pd
 import numpy as np
 from numpy import array
 from Bio import SeqIO
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import tensorflow as tf
+import os
+from typing import List, Tuple
 
 network_final_original = keras.models.load_model("irlstm")
 detrend_int_original = 0.029905550181865692
@@ -19,17 +23,38 @@ normal_mean_smooth = -0.011196041799376931
 normal_std_smooth = 0.651684644408004
 
 def dnaOneHot(sequence):
-    seq_array = array(list(sequence))
-    code = {"A": [0], "C": [1], "G": [2], "T": [3], "N": [4],
-            "a": [0], "c": [1], "g": [2], "t": [3], "n": [4]}
-    onehot_encoded_seq = []
-    for char in seq_array:
-        onehot_encoded = np.zeros(5)
-        onehot_encoded[code[char]] = 1
-        onehot_encoded_seq.append(onehot_encoded[0:4])
+    code = np.array([
+        [1, 0, 0, 0],  # A / a
+        [0, 1, 0, 0],  # C / c
+        [0, 0, 1, 0],  # G / g
+        [0, 0, 0, 1],  # T / t
+        [0, 0, 0, 0]   # N / n
+    ])
+    
+    mapping = np.zeros(128, dtype=int)
+    mapping[ord('A')] = 0
+    mapping[ord('C')] = 1
+    mapping[ord('G')] = 2
+    mapping[ord('T')] = 3
+    mapping[ord('N')] = 4
+    mapping[ord('a')] = 0
+    mapping[ord('c')] = 1
+    mapping[ord('g')] = 2
+    mapping[ord('t')] = 3
+    mapping[ord('n')] = 4
+
+    indices = np.fromiter((mapping[ord(char)] for char in sequence), dtype=int)
+    onehot_encoded_seq = code[indices]
+
     return onehot_encoded_seq
 
-def cycle_fasta(inputfile:str, outputbase:str, smooth:bool=True):
+def construct_predict_fn(model):
+    @tf.function(reduce_retracing=True)
+    def predict_fn(x):
+        return model(x, training=False)
+    return predict_fn
+
+def cycle_fasta(inputfile:str, outputbase:str, smooth:bool=True, chunk_size=None, num_threads=None):
     """
     Make predictions for a given FASTA file.
 
@@ -55,47 +80,87 @@ def cycle_fasta(inputfile:str, outputbase:str, smooth:bool=True):
     normal_mean = normal_mean_smooth if smooth else normal_mean_original
     normal_std = normal_std_smooth if smooth else normal_std_original
 
-    if smooth:
-        print(f"Making smooth predictions (DNAcycP2)\n\n")
-    else:
-        print(f"Making predictions (DNAcycP)\n\n")
+    if chunk_size is None:
+        chunk_size = 100000
+    if num_threads is None:
+        num_threads = os.cpu_count()
 
+    predict_fn = construct_predict_fn(network_final)
+
+    if smooth:
+        print(f"Making smooth predictions (DNAcycP2)\n\n", flush=True)
+    else:
+        print(f"Making predictions (DNAcycP)\n\n", flush=True)
+
+    def process_chunk(args) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Process a chunk of the sequence data with both forward and reverse predictions.
+        """
+        onehot_sequence, start_ind, end_ind, network_final = args
+        
+        # Extract local sequence window
+        ind_local = np.arange(start_ind, end_ind)
+        onehot_sequence_local = onehot_sequence[np.arange(ind_local[0] - 25, ind_local[-1] - 24)[:, None] + np.arange(50)]
+        onehot_sequence_local = onehot_sequence_local.reshape((-1, 50, 4, 1))
+        
+        # Create reverse sequence
+        onehot_sequence_local_reverse = np.flip(onehot_sequence_local, [1, 2])
+        
+        # Convert to TensorFlow tensors with fixed shape
+        onehot_sequence_local = tf.cast(onehot_sequence_local, tf.float32)
+        onehot_sequence_local_reverse = tf.cast(onehot_sequence_local_reverse, tf.float32)
+        
+        # Make predictions using the optimized prediction function
+        fit_local = predict_fn(onehot_sequence_local).numpy().reshape(-1)
+        fit_local_reverse = predict_fn(onehot_sequence_local_reverse).numpy().reshape(-1)
+        
+        return fit_local, fit_local_reverse
+    
     for fasta in genome_file:
         chrom = fasta.id
         genome_sequence = str(fasta.seq)
+        print(f"Sequence length for ID {chrom}: {len(genome_sequence)}", flush=True)
         onehot_sequence = dnaOneHot(genome_sequence)
         onehot_sequence = array(onehot_sequence)
         onehot_sequence = onehot_sequence.reshape((onehot_sequence.shape[0],4,1))
-        print("sequence length: "+chrom+" "+str(onehot_sequence.shape[0]))
+        print("Predicting cyclizability...", flush=True)
+
+        print(f"Chunk size: {chunk_size}, num threads: {num_threads}", flush=True)
+
+        sequence_length = onehot_sequence.shape[0] - 49
+        start_indices = range(25, sequence_length + 25, chunk_size)
+        end_indices = [min(start + chunk_size, sequence_length + 25) for start in start_indices]
+        
+        chunk_args = [
+            (onehot_sequence, start, end, predict_fn) 
+            for start, end in zip(start_indices, end_indices)
+        ]
+        
         fit = []
         fit_reverse = []
-        for ind_local in np.array_split(range(25, onehot_sequence.shape[0]-24), 100):
-            onehot_sequence_local = []
-            for i in ind_local:
-                s = onehot_sequence[(i-25):(i+25),]
-                onehot_sequence_local.append(s)
-            onehot_sequence_local = array(onehot_sequence_local)
-            onehot_sequence_local = onehot_sequence_local.reshape((onehot_sequence_local.shape[0],50,4,1))
-            onehot_sequence_local_reverse = np.flip(onehot_sequence_local,[1,2])
-            fit_local = network_final.predict(onehot_sequence_local)
-            fit_local = fit_local.reshape((fit_local.shape[0]))
-            fit.append(fit_local)
-            fit_local_reverse = network_final.predict(onehot_sequence_local_reverse)
-            fit_local_reverse = fit_local_reverse.reshape((fit_local_reverse.shape[0]))
-            fit_reverse.append(fit_local_reverse)
-        fit = [item for sublist in fit for item in sublist]
-        fit = array(fit)
-        fit_reverse = [item for sublist in fit_reverse for item in sublist]
-        fit_reverse = array(fit_reverse)
-        fit = detrend_int + (fit + fit_reverse) * detrend_slope/2
+        
+        with ThreadPoolExecutor(max_workers=num_threads) as executor:
+            for i, (fit_local, fit_local_reverse) in enumerate(executor.map(process_chunk, chunk_args)):
+                fit.append(fit_local)
+                fit_reverse.append(fit_local_reverse)
+                
+                # Progress reporting for long sequences
+                sequences_processed = len(fit_local)
+                total_processed = sum(len(chunk) for chunk in fit)
+                if onehot_sequence.shape[0] > 10**7:
+                    print(f"\t Completed predictions on {total_processed} out of {sequence_length} sequences", flush=True)
+
+        fit = np.concatenate(fit)  # Assuming fit is a list of arrays
+        fit_reverse = np.concatenate(fit_reverse)
+        fit = detrend_int + (fit + fit_reverse) * detrend_slope / 2
         fit2 = fit * normal_std + normal_mean
         n = fit.shape[0]
-        fitall = np.vstack((range(25,25+n),fit,fit2))
-        fitall = pd.DataFrame([*zip(*fitall)])
-        fitall.columns = ["posision","c_score_norm","c_score_unnorm"]
-        fitall = fitall.astype({"posision": int})
+        positions = np.arange(25, 25 + n)
+        fitall = np.column_stack((positions, fit, fit2))
+        fitall = pd.DataFrame(fitall, columns=["position", "c_score_norm", "c_score_unnorm"])
+        fitall = fitall.astype({"position": int})
         fitall.to_csv(outputbase+"_cycle_"+chrom+".txt", index = False)
-        print("Output file: "+outputbase+"_cycle_"+chrom+".txt")
+        print("Output file: "+outputbase+"_cycle_"+chrom+".txt", flush=True)
 
 def cycle_txt(inputfile:str, outputbase:str, smooth:bool=True):
     """

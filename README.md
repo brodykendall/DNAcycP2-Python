@@ -3,8 +3,6 @@ DNAcycP Python package
 
 **Maintainer**: Ji-Ping Wang, \<<jzwang@northwestern.edu>\>; Brody Kendall \<<curtiskendall2025@u.northwestern.edu>\>; Keren Li, \<<keren.li@northwestern.edu>\>
 
-TODO: license
-
 **License**: GPLv3
 
 **Cite DNAcycP package**:
@@ -79,31 +77,36 @@ source env/bin/activate test
 
 DNAcycP supports the input sequence in two formats: FASTA format (with sequence name line beginning with “>”) or plain TXT format. Unlike in the web server version where only one sequence is allowed in input for prediction, the Python package allows multiple sequences in the same input file. In particular for the TXT format, each line (can be of different length) in the file is regarded as one input sequence for prediction. 
 
-The main funciton in DNAcycP is `dnacycp-cli`, which can be called as follows:
+The main funciton in DNAcycP is `dnacycp-cli`, which using one of the following lines:
 ```bash
-dnacycp-cli -f/-t -s <inputfile> <basename>
+dnacycp-cli -f -s <inputfile> <basename> [-L <chunk_length>] [-n <num_cores>]
+dnacycp-cli -f <inputfile> <basename> [-L <chunk_length>] [-n <num_cores>]
+dnacycp-cli -t -s <inputfile> <basename>
+dnacycp-cli -t <inputfile> <basename>
 ```
 
-or:
-```bash
-dnacycp-cli -f/-t <inputfile> <basename>
-```
 where 
   * `-f/-t`: indicates the input file name in FASTA or TXT format respectively; either one must be specified.
   * `-s`: (optional) indicates the updated model trained on smoothed data (DNAcycP2) should be used. If `-s` is omitted, the model trained on the original data (DNAcycP) will be used.
   * `<inputfile>`: is the name of the intput file;
   * `<basename>`: is the name base for the output file.
+  * `-L <chunk_length>`: is the length of sequence that a given core will be predicting on at any given time (default 100,000; only applicable with `-f`)
+  * `-n <num_cores>`: is the number of cores to be used in parallel (default 1; only applicable with `-f`)
 
 ### Example 1:
 
 ```bash
-dnacycp-cli -f -s ./data/raw/ex1.fasta ./data/raw/ex1_smooth
-dnacycp-cli -f ./data/raw/ex1.fasta ./data/raw/ex1_original
+dnacycp-cli -f -s ./data/raw/ex1.fasta ./data/raw/ex1_smooth -L 1000 -n 2
+dnacycp-cli -f ./data/raw/ex1.fasta ./data/raw/ex1_original -L 1000 -n 2
 ```
 
 The `-f` option specifies that the input file named "ex1.fasta" is in fasta format. 
 
 The `-s` option specifies that the DNAcycP2 model should be used for prediction, while omitting the `-s` argument specifies that the original DNAcycP model should be used for prediction.
+
+The `-L` option specifies that prediction will occur on sequences of length 1000 for a given core
+
+The `-n` option specifies that prediction will occur on 2 cores in parallel
 
 The `./data/raw/ex1.fasta` is the sequence file path and name, and `./data/raw/ex1` specifies the output file will be saved in the directory `./data/raw` with file name initialized with `ex1`.
 For example, `ex1.fasta` contains two sequences with IDs "1" and "2" respectively.
