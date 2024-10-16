@@ -75,10 +75,6 @@ def cycle_fasta(inputfile:str, outputbase:str, smooth:bool=True, chunk_size=None
     genome_file = SeqIO.parse(open(inputfile),'fasta')
 
     network_final = network_final_smooth if smooth else network_final_original
-    detrend_int = detrend_int_smooth if smooth else detrend_int_original
-    detrend_slope = detrend_slope_smooth if smooth else detrend_slope_original
-    normal_mean = normal_mean_smooth if smooth else normal_mean_original
-    normal_std = normal_std_smooth if smooth else normal_std_original
 
     if chunk_size is None:
         chunk_size = 100000
@@ -152,12 +148,19 @@ def cycle_fasta(inputfile:str, outputbase:str, smooth:bool=True, chunk_size=None
 
         fit = np.concatenate(fit)  # Assuming fit is a list of arrays
         fit_reverse = np.concatenate(fit_reverse)
-        fit = detrend_int + (fit + fit_reverse) * detrend_slope / 2
-        fit2 = fit * normal_std + normal_mean
+        if smooth:
+            fit = detrend_int_smooth + (fit + fit_reverse) * detrend_slope_smooth / 2
+            fit2 = fit * normal_std_smooth + normal_mean_smooth
+        else:
+            fit = detrend_int_original + (fit + fit_reverse) * detrend_slope_original / 2
+            fit2 = fit * normal_std_original + normal_mean_original
         n = fit.shape[0]
         positions = np.arange(25, 25 + n)
         fitall = np.column_stack((positions, fit, fit2))
-        fitall = pd.DataFrame(fitall, columns=["position", "c_score_norm", "c_score_unnorm"])
+        if smooth:
+            fitall = pd.DataFrame(fitall, columns=["position", "C0S_score_norm", "C0S_score_unnorm"])
+        else:
+            fitall = pd.DataFrame(fitall, columns=["position", "C0_score_norm", "C0_score_unnorm"])
         fitall = fitall.astype({"position": int})
         fitall.to_csv(outputbase+"_cycle_"+chrom+".txt", index = False)
         print("Output file: "+outputbase+"_cycle_"+chrom+".txt", flush=True)
@@ -181,10 +184,6 @@ def cycle_txt(inputfile:str, outputbase:str, smooth:bool=True):
     The output files will be named as `<outputbase>_cycle_norm.txt` and `<outputbase>_cycle_unnorm.txt`, where `<outputbase>` is the base name given as an argument.
     """
     network_final = network_final_smooth if smooth else network_final_original
-    detrend_int = detrend_int_smooth if smooth else detrend_int_original
-    detrend_slope = detrend_slope_smooth if smooth else detrend_slope_original
-    normal_mean = normal_mean_smooth if smooth else normal_mean_original
-    normal_std = normal_std_smooth if smooth else normal_std_original
 
     if smooth:
         print(f"Making smooth predictions (DNAcycP2)\n\n")
@@ -210,9 +209,15 @@ def cycle_txt(inputfile:str, outputbase:str, smooth:bool=True):
         model_pred = network_final.predict(X)
         model_pred_reverse = network_final.predict(X_reverse)
 
-        model_pred = detrend_int + (model_pred + model_pred_reverse) * detrend_slope/2
+        if smooth:
+            model_pred = detrend_int_smooth + (model_pred + model_pred_reverse) * detrend_slope_smooth / 2
+        else:
+            model_pred = detrend_int_original + (model_pred + model_pred_reverse) * detrend_slope_original / 2
         output_cycle = model_pred.flatten()
-        output_cycle2 = np.array([item * normal_std + normal_mean for item in output_cycle])
+        if smooth:
+            output_cycle2 = np.array([item * normal_std_smooth + normal_mean_smooth for item in output_cycle])
+        else:
+            output_cycle2 = np.array([item * normal_std_original + normal_mean_original for item in output_cycle])
         output_cycle = list(output_cycle)
         output_cycle2 = list(output_cycle2)
     else:
@@ -236,23 +241,46 @@ def cycle_txt(inputfile:str, outputbase:str, smooth:bool=True):
                 # No status bar for short sequences (verbose=0):
                 cycle_local = network_final.predict(onehot_loops, verbose=0)
                 cycle_local_reverse = network_final.predict(onehot_loops_reverse, verbose=0)
-            cycle_local = detrend_int + (cycle_local + cycle_local_reverse) * detrend_slope/2
+            if smooth:
+                cycle_local = detrend_int_smooth + (cycle_local + cycle_local_reverse) * detrend_slope_smooth/2
+            else:
+                cycle_local = detrend_int_original + (cycle_local + cycle_local_reverse) * detrend_slope_original/2
             cycle_local = cycle_local.reshape(cycle_local.shape[0])
             output_cycle.append(cycle_local)
             if j%10==9:
                 print(f"Completed {j+1} out of {lenX} total sequences")
-        output_cycle2 = [item * normal_std + normal_mean for item in output_cycle]
-    with open(outputbase+"_cycle_norm.txt", "w") as file:
-        for row in output_cycle:
-            if isinstance(row, (np.floating, float)):
-                s = str(row)
-            else:
-                s = " ".join(map(str, row))
-            file.write(s+'\n')
-    with open(outputbase+"_cycle_unnorm.txt", "w") as file:
-        for row in output_cycle2:
-            if isinstance(row, (np.floating, float)):
-                s = str(row)
-            else:
-                s = " ".join(map(str, row))
-            file.write(s+'\n')
+        if smooth:
+            output_cycle = [item * normal_std_smooth + normal_mean_smooth for item in output_cycle]
+        else:
+            output_cycle = [item * normal_std_original + normal_mean_original for item in output_cycle]
+    
+    if smooth:
+        with open(outputbase+"_C0S_norm.txt", "w") as file:
+            for row in output_cycle:
+                if isinstance(row, (np.floating, float)):
+                    s = str(row)
+                else:
+                    s = " ".join(map(str, row))
+                file.write(s+'\n')
+        with open(outputbase+"_C0S_unnorm.txt", "w") as file:
+            for row in output_cycle2:
+                if isinstance(row, (np.floating, float)):
+                    s = str(row)
+                else:
+                    s = " ".join(map(str, row))
+                file.write(s+'\n')
+    else:
+        with open(outputbase+"_C0_norm.txt", "w") as file:
+            for row in output_cycle:
+                if isinstance(row, (np.floating, float)):
+                    s = str(row)
+                else:
+                    s = " ".join(map(str, row))
+                file.write(s+'\n')
+        with open(outputbase+"_C0_unnorm.txt", "w") as file:
+            for row in output_cycle2:
+                if isinstance(row, (np.floating, float)):
+                    s = str(row)
+                else:
+                    s = " ".join(map(str, row))
+                file.write(s+'\n')

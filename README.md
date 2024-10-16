@@ -75,7 +75,7 @@ source env/bin/activate test
 
 ## Usage
 
-DNAcycP supports the input sequence in two formats: FASTA format (with sequence name line beginning with “>”) or plain TXT format. Unlike in the web server version where only one sequence is allowed in input for prediction, the Python package allows multiple sequences in the same input file. In particular for the TXT format, each line (can be of different length) in the file is regarded as one input sequence for prediction. 
+DNAcycP supports the input sequence in two formats: FASTA format (with sequence name line beginning with “>”) or plain TXT format. Unlike in the web server version where only one sequence is allowed in input for prediction, the Python package allows multiple sequences in the same input file. In particular for the TXT format, each line (can be of different length) in the file is regarded as one input sequence for prediction, however the computation is most efficient when every sequence has length exactly 50bp. 
 
 The main funciton in DNAcycP is `dnacycp-cli`, which using one of the following lines:
 ```bash
@@ -92,6 +92,10 @@ where
   * `<basename>`: is the name base for the output file.
   * `-L <chunk_length>`: is the length of sequence that a given core will be predicting on at any given time (default 100000; only applicable with `-f`)
   * `-n <num_cores>`: is the number of cores to be used in parallel (default 1; only applicable with `-f`)
+
+The `-f` setting (FASTA format) is designed for larger files, so it has added parallelization capability. To utilize this capability, specify the number of cores to be greater than 1 using the `n_cores` argument (default 1). You can also specify the length of the sequence that each core will predict on at a given time using the `chunk_length` argument (default 100000).
+
+TODO: add parameter choice suggestions here
 
 ### Example 1:
 
@@ -112,7 +116,7 @@ The `./data/raw/ex1.fasta` is the sequence file path and name, and `./data/raw/e
 For example, `ex1.fasta` contains two sequences with IDs "1" and "2" respectively.
 The output files containing DNAcycP2 predictions will be named as "ex1_smooth_cycle_1.txt" and "ex1_smooth_cycle_2.txt" for the first and second sequences respectively, while the output files containing DNAcycP predictions will be named as "ex1_original_cycle_1.txt" and "ex1_original_cycle_2.txt".
 
- Each output file contains three columns: `position`, `C_score_norm`, `C_score_unnorm`. The `C_score_norm` is the predicted C-score from the model trained based on the standardized loop-seq score (in the case of DNAcycP) or the standardized smoothed intrinsic cyclizability estimate (in the case of DNAcycP2) of the tiling library of Basu et al 2021 (i.e. 0 mean unit variance). When predictions are made using the original DNAcycP, the `C_score_unnorm` is the predicted C-score recovered to the original scale of loop-seq score in the tiling library data from Basu et el 2021. When predictions are made using the updated DNAcycP2 (`-s`), the `C_score_unnorm` is the predicted C-score recovered to the scale of standardized raw cyclizability scores of the tiling library data. The standardized loop-seq score provides two advantages. As loop-seq may be subject to a library-specific constant, standardized C-score is defined with a unified baseline as yeast genome (i.e. 0 mean in yeast genome). Secondly, the C-score provides statisitcal significance indicator, i.e. a C-score of 1.96 indicates 97.5% in the distribution.
+Each output file contains three columns. The first columns is always `position`. When `-s` is specified, the next columns are `C0S_score_norm`, `C0S_score_unnorm`, and when `-s` is not specified, the next columns are `C0_score_norm` and `C0_score_unnorm`. The predicted C-score for either model is the normalized output (`C0S_score_norm` and `C0_score_norm`), the predictions from the model trained based on the standardized loop-seq score (in the case of DNAcycP) or the standardized smoothed intrinsic cyclizability estimate (in the case of DNAcycP2) of the Tiling library of Basu et al 2021 (i.e. 0 mean unit variance). When predictions are made using the original DNAcycP, the `C0_score_unnorm` is the predicted C-score recovered to the original scale of loop-seq score in the Tiling library data from Basu et el 2021. When predictions are made using the updated DNAcycP2 (`-s`), the `C0S_score_unnorm` is the predicted C-score recovered to the scale of standardized raw cyclizability scores of the Tiling library data. The standardized scores provide two advantages. As loop-seq may be subject to a library-specific constant, standardized C-score is defined with a unified baseline as yeast genome (i.e. 0 mean in yeast genome). Secondly, the C-score provides statisitcal significance indicator, i.e. a C-score of 1.96 indicates 97.5% in the distribution.
 
 
 ### Example 2:
@@ -125,7 +129,7 @@ With `-t` option, the input file is regarded as in TXT format, each line represe
 
 The `-s` option again specifies that the DNAcycP2 model should be used for prediction, while omitting the `-s` argument specifies that the original DNAcycP model should be used for prediction.
 
-The predicted C-scores will be saved into two files, one with `_unnorm.txt` and the other with `_norm.txt` for unnormalized and normalized C-score, with C-scores in each line corresponding to the sequence in the input file in the same order.
+The predicted C-scores will be saved into two files, one with `_C0S_unnorm.txt` and the other with `_C0S_norm.txt` in the DNAcycP2 (`-s`) case, or `_C0_unnorm.txt` and `_C0_norm.txt` in the DNAcycP case. C-scores in each line correspond to the sequence in the input file in the same order.
 
 For any input sequence, DNAcycP predicts the C-score for every 50 bp. Regardless of the input sequence format the first C-score in the output file corresponds to the sequence from position 1-50, second for 2-51 and so forth.
 
