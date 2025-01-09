@@ -1,37 +1,47 @@
-DNAcycP Python package 
+DNAcycP2 Python package 
 ================
 
 **Maintainer**: Ji-Ping Wang, \<<jzwang@northwestern.edu>\>; Brody Kendall \<<curtiskendall2025@u.northwestern.edu>\>; Keren Li, \<<keren.li@northwestern.edu>\>
 
 **License**: GPLv3
 
-**Cite DNAcycP package**:
+**Cite DNAcycP2 package**:
 
 TODO: Update citation when applicable
 
-Li, K., Carroll, M., Vafabakhsh, R., Wang, X.A. and Wang, J.-P., DNAcycP: A Deep Learning Tool for DNA Cyclizability Prediction, *Nucleic Acids Research*, 2021
+## What is DNAcycP2?
 
-## What is DNAcycP?
+**DNAcycP2**, short for **DNA** **cyc**lizablity **P**rediction v**2**, is a Python package for accurate, unbiased prediction of DNA intrinsic cyclizablity score. It was built upon a deep learning architecture with a hybrid of Inception and Residual network structure and an LSTM layer. DNAcycP2 is an updated version of DNAcycP, released by Li et al 2021 (see below). DNAcycP was trained based on loop-seq data from Basu et al 2021 (see below), while DNAcycP2 was trained based on smoothed predictions of this loop-seq data. The predicted score (for either DNAcycP or DNAcycP2), termed **C-score** achieves high accuracy compared to the experimentally measured cyclizablity score by loop-seq assay.
 
-**DNAcycP**, short for **DNA** **cyc**lizablity **P**rediction, is a Python package for accurate prediction of DNA intrinsic cyclizablity score. It was built upon a deep learning architecture with a hybrid of Inception and Residual network structure and an LSTM layer. The original DNAcycP was trained based on loop-seq data from Basu et al 2021 (see below). An updated version (DNAcycP2) was trained based on smoothed predictions of this loop-seq data. The predicted score (for either DNAcycP or DNAcycP2), termed **C-score** achieves high accuracy compared to the experimentally measured cyclizablity score by loop-seq assay.
+## Key differences between DNAcycP2 and DNAcycP
 
-## Available format of DNAcycP
+Following the release of DNAcycP, it was discovered that the training data contained residual measurement bias, leading to biased predictions. To correct this bias in the data, we employed a data augmentation + periodic smoothing approach to generate new, unbiased estimates of intrinsic DNA cyclizability for each sequence in the original training dataset. We then trained a new model on the unbiased data with architecture identical to that of DNAcycP, named DNAcycP2. More details on this process can be found in the following paper: (CITATION).
 
-TODO: update reference to R package
-TODO: update web server
+TODO: fill in citation above
 
-DNAcycP is available in three formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, a standalone Python package available for free download from https://github.com/jipingw/DNAcycP, and an R package (coming soon).
+Previously, the measurement bias introduced by the location of the biotin tether was not adequately accounted for. By employing data augmentation and smoothing with a moving average approach over the length of 1 full helical repeat at 1bp resolution in the genome, we can remove this bias while still maintaining high resolution, accurate estimates of intrinsic cyclizability.
 
+![Visualization of difference between DNAcycP2 and DNAcycP.](./figures/Figure7.png)
 
-## Architecture of DNAcycP
+## Available formats of DNAcycP2 and DNAcycP
 
-The core of DNAcycP is a deep learning architecture mixed with an Inception-ResNet structure and an LSTM layer (IR+LSTM, Fig 1b) that processes the sequence and its reverse complement separately, the results from which are averaged and detrended to reach the predicted intrinsic score. (Fig 1a).
+DNAcycP2 is available in three formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, a standalone Python package avilable for free download from https://github.com/jipingw/DNAcycP2, and an R package available for free download from https://github.com/jipingw/dnacycp2-R.
+
+TODO: update web server - possible selection on server of which model to use?
+
+TODO: ensure correct links
+
+DNAcycP is still available in its two original formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, and a standalone Python package available for free download from https://github.com/jipingw/DNAcycP
+
+## Architecture of DNAcycP2
+
+The core of DNAcycP2 is a deep learning architecture mixed with an Inception-ResNet structure and an LSTM layer (IR+LSTM, Fig 1b) that processes the sequence and its reverse complement separately, the results from which are averaged and detrended to reach the predicted intrinsic score. (Fig 1a).
 
 IR+LSTM starts with a convolutional layer for dimension reduction such that the encoded sequence space is reduced from 2D to 1D. The output is fed into an inception module that contains two parallel branches, each having two sequentially connected convolutional layers with branch-specific kernels to capture sequence features of different scale. The first branch has kernel dimension 3x1 for both layers and the second has kernel dimension 11x1 and 21x1 sequentially. The output of the inception module is combined by concatenation and added back to the input of the inception module to form a short circuit or residual network. Finally, the IR+LSTM concludes with a dense layer to predict output with linear activation function. 
 
-![A diagram of DNAcycP.](./figures/Figure1.png)
+![A diagram of DNAcycP2.](./figures/Figure1.png)
 
-## DNAcycP required packages
+## DNAcycP2 required packages
 
 *The recommended python version is 3.11*
 
@@ -45,63 +55,63 @@ IR+LSTM starts with a convolutional layer for dimension reduction such that the 
 
 ## Installation
 
-**DNAcycP** Python package requires specific versions of dependencies. We recommend to install and run **DNAcycP** in a virtual environment. For example, suppose the downloaded DNAcycP package is unpacked as a folder `dnacycp-main`. We can install DNAcycP in a virtual environment as below:
+**DNAcycP2** Python package requires specific versions of dependencies. We recommend to install and run **DNAcycP2** in a virtual environment. For example, suppose the downloaded DNAcycP2 package is unpacked as a folder `dnacycp2-main`. We can install DNAcycP2 in a virtual environment as below:
 
 ```bash
-cd dnacycp-main
+cd dnacycp2-main
 python3 -m venv env
 source env/bin/activate test
 pip install -e .
 ```
 
-Run `dnacycp-cli ` to see whether it is installed properly.
+Run `dnacycp2-cli ` to see whether it is installed properly.
 
 *Note: You may need to deactivate then re-activate the virtual environment prior to this step (see below)*
 
 ```bash
-dnacycp-cli 
+dnacycp2-cli 
 ```
 
-Once done with DNAcycP for prediction, you can close the virtual environment by using:
+Once done with DNAcycP2 for prediction, you can close the virtual environment by using:
 ```bash
 deactivate
 ```
 
-Once the virtual environment is deactivated, you need to re-activate it before you run another session of prediciotn as follows:
+Once the virtual environment is deactivated, you need to re-activate it before you run another session of prediction as follows:
 ```bash
-cd dnacycp-main
+cd dnacycp2-main
 source env/bin/activate test
 ```
 
 ## Usage
 
-DNAcycP supports the input sequence in two formats: FASTA format (with sequence name line beginning with “>”) or plain TXT format. Unlike in the web server version where only one sequence is allowed in input for prediction, the Python package allows multiple sequences in the same input file. In particular for the TXT format, each line (can be of different length) in the file is regarded as one input sequence for prediction, however the computation is most efficient when every sequence has length exactly 50bp. 
+DNAcycP2 supports the input sequence in two formats: FASTA format (with sequence name line beginning with “>”) or plain TXT format. Unlike in the web server version where only one sequence is allowed in input for prediction, the Python package allows multiple sequences in the same input file. In particular for the TXT format, each line (can be of different length) in the file is regarded as one input sequence for prediction, however the computation is significantly more efficient when every sequence has length exactly 50bp. 
 
-The main funciton in DNAcycP is `dnacycp-cli`, which using one of the following lines:
+The main function in DNAcycP2 is `dnacycp2-cli`, which is called through one of the following lines:
 ```bash
-dnacycp-cli -f -s <inputfile> <basename> [-L <chunk_length>] [-n <num_cores>]
-dnacycp-cli -f <inputfile> <basename> [-L <chunk_length>] [-n <num_cores>]
-dnacycp-cli -t -s <inputfile> <basename>
-dnacycp-cli -t <inputfile> <basename>
+dnacycp2-cli -f -s <inputfile> <basename> [-L <chunk_length>] [-n <num_cores>]
+dnacycp2-cli -f <inputfile> <basename> [-L <chunk_length>] [-n <num_cores>]
+dnacycp2-cli -t -s <inputfile> <basename>
+dnacycp2-cli -t <inputfile> <basename>
 ```
 
 where 
   * `-f/-t`: indicates the input file name in FASTA or TXT format respectively; either one must be specified.
-  * `-s`: (optional) indicates the updated model trained on smoothed data (DNAcycP2) should be used. If `-s` is omitted, the model trained on the original data (DNAcycP) will be used.
+  * `-s`: (optional) indicates the updated model trained on smoothed data (**DNAcycP2**) should be used. **If `-s` is omitted, the model trained on the original, biased data (DNAcycP) will be used**.
   * `<inputfile>`: is the name of the intput file;
   * `<basename>`: is the name base for the output file.
   * `-L <chunk_length>`: is the length of sequence that a given core will be predicting on at any given time (default 100000; only applicable with `-f`)
-  * `-n <num_cores>`: is the number of cores to be used in parallel (default 1; only applicable with `-f`)
+  * `-n <num_cores>`: is the number of cores to be used in parallel (default 1 - no parallelization; only applicable with `-f`)
 
-The `-f` setting (FASTA format) is designed for larger files, so it has added parallelization capability. To utilize this capability, specify the number of cores to be greater than 1 using the `n_cores` argument (default 1). You can also specify the length of the sequence that each core will predict on at a given time using the `chunk_length` argument (default 100000).
+The `-f` setting (FASTA format) is designed for larger files, so it has added parallelization capability. To utilize this capability, specify the number of cores to be greater than 1 using the `n_cores` argument (default 1 - no parallelization). You can also specify the length of the sequence that each core will predict on at a given time using the `chunk_length` argument (default 100000).
 
 TODO: add parameter choice suggestions here
 
 ### Example 1:
 
 ```bash
-dnacycp-cli -f -s ./data/raw/ex1.fasta ./data/raw/ex1_smooth -L 1000 -n 2
-dnacycp-cli -f ./data/raw/ex1.fasta ./data/raw/ex1_original -L 1000 -n 2
+dnacycp2-cli -f -s ./data/raw/ex1.fasta ./data/raw/ex1_smooth -L 1000 -n 2
+dnacycp2-cli -f ./data/raw/ex1.fasta ./data/raw/ex1_original -L 1000 -n 2
 ```
 
 The `-f` option specifies that the input file named "ex1.fasta" is in fasta format. 
@@ -122,8 +132,8 @@ Each output file contains three columns. The first columns is always `position`.
 ### Example 2:
 
 ```bash
-dnacycp-cli -t -s ./data/raw/ex2.txt ./data/raw/ex2_smooth
-dnacycp-cli -t ./data/raw/ex2.txt ./data/raw/ex2_original
+dnacycp2-cli -t -s ./data/raw/ex2.txt ./data/raw/ex2_smooth
+dnacycp2-cli -t ./data/raw/ex2.txt ./data/raw/ex2_original
 ```
 With `-t` option, the input file is regarded as in TXT format, each line representing a sequence without sequence name line that begins with ">".
 
@@ -131,12 +141,12 @@ The `-s` option again specifies that the DNAcycP2 model should be used for predi
 
 The predicted C-scores will be saved into two files, one with `_C0S_unnorm.txt` and the other with `_C0S_norm.txt` in the DNAcycP2 (`-s`) case, or `_C0_unnorm.txt` and `_C0_norm.txt` in the DNAcycP case. C-scores in each line correspond to the sequence in the input file in the same order.
 
-For any input sequence, DNAcycP predicts the C-score for every 50 bp. Regardless of the input sequence format the first C-score in the output file corresponds to the sequence from position 1-50, second for 2-51 and so forth.
+For any input sequence, DNAcycP2 predicts the C-score for every 50 bp. Regardless of the input sequence format the first C-score in the output file corresponds to the sequence from position 1-50, second for 2-51 and so forth.
 
 ### Run prediction within Python interactive session
 
 ```python
-from dnacycp import cycle_fasta, cycle_txt
+from dnacycp2 import cycle_fasta, cycle_txt
 
 # Smooth prediction using DNAcycP2:
 cycle_fasta("data/raw/ex1.fasta","ex1_smooth", smooth=True, chunk_size=1000, num_threads=2)
@@ -149,6 +159,8 @@ cycle_txt("data/raw/ex2.txt","ex2_original",smooth=False)
 
 
 ## Other References
+
+* Li, K., Carroll, M., Vafabakhsh, R., Wang, X.A. and Wang, J.-P., DNAcycP: A Deep Learning Tool for DNA Cyclizability Prediction, *Nucleic Acids Research*, 2021
 
 * Basu, A., Bobrovnikov, D.G., Qureshi, Z., Kayikcioglu, T., Ngo, T.T.M., Ranjan, A., Eustermann, S., Cieza, B., Morgan, M.T., Hejna, M. et al. (2021) Measuring DNA mechanics on the genome scale. Nature, 589, 462-467.
 

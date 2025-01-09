@@ -1,11 +1,11 @@
-"""DNAcycP - DNA Sequence Cyclizability Prediction
+"""DNAcycP2 - DNA Sequence Cyclizability Prediction
 
 Usage:
-    dnacycp-cli -f <inputfile> <basename> [-L <chunk_length>] [-n <num_threads>]
-    dnacycp-cli -f -s <inputfile> <basename> [-L <chunk_length>] [-n <num_threads>]
-    dnacycp-cli -t <inputfile> <basename>
-    dnacycp-cli -t -s <inputfile> <basename>
-    dnacycp-cli (-h | --help)
+    dnacycp2-cli -f <inputfile> <basename> [-L <chunk_length>] [-n <num_threads>]
+    dnacycp2-cli -f -s <inputfile> <basename> [-L <chunk_length>] [-n <num_threads>]
+    dnacycp2-cli -t <inputfile> <basename>
+    dnacycp2-cli -t -s <inputfile> <basename>
+    dnacycp2-cli (-h | --help)
     
 Arguments:
     <inputfile> Input file name.
@@ -20,7 +20,7 @@ Options:
     -n <num_threads>    Number of threads [default: 1].
 """
 from docopt import docopt
-from dnacycp import cycle_fasta, cycle_txt
+from dnacycp2 import cycle_fasta, cycle_txt
 import keras
 import pandas as pd
 import numpy as np
