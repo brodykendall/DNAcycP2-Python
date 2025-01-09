@@ -250,9 +250,9 @@ def cycle_txt(inputfile:str, outputbase:str, smooth:bool=True):
             if j%10==9:
                 print(f"Completed {j+1} out of {lenX} total sequences")
         if smooth:
-            output_cycle = [item * normal_std_smooth + normal_mean_smooth for item in output_cycle]
+            output_cycle2 = [item * normal_std_smooth + normal_mean_smooth for item in output_cycle]
         else:
-            output_cycle = [item * normal_std_original + normal_mean_original for item in output_cycle]
+            output_cycle2 = [item * normal_std_original + normal_mean_original for item in output_cycle]
     
     if smooth:
         with open(outputbase+"_C0S_norm.txt", "w") as file:
