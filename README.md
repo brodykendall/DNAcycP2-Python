@@ -29,8 +29,6 @@ DNAcycP2 is available in three formats: A web server available at http://DNAcycP
 
 TODO: update web server - possible selection on server of which model to use?
 
-TODO: ensure correct links
-
 DNAcycP is still available in its two original formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, and a standalone Python package available for free download from https://github.com/jipingw/DNAcycP
 
 ## Architecture of DNAcycP2
@@ -105,7 +103,7 @@ where
 
 The `-f` setting (FASTA format) is designed for larger files, so it has added parallelization capability. To utilize this capability, specify the number of cores to be greater than 1 using the `n_cores` argument (default 1 - no parallelization). You can also specify the length of the sequence that each core will predict on at a given time using the `chunk_length` argument (default 100000).
 
-TODO: add parameter choice suggestions here
+For reference, on a personal computer (16 Gb RAM, M1 chip with 8-core CPU), prediction at full parallelization directly on the yeast genome FASTA file completes in 12 minutes, and on the hg38 human genome Chromosome I FASTA file in just over 4 hours. In our experience, selection of parallelization parameters (-L and -n) has little affect when making predictions on a personal computer, but if using the package on a high-performance compute cluster, prediction time should decrease as the number of cores increases. If you do run into memory issues, we suggest first reducing -L
 
 ### Example 1:
 
