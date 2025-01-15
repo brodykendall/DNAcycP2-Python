@@ -158,9 +158,9 @@ def cycle_fasta(inputfile:str, outputbase:str, smooth:bool=True, chunk_size=None
         positions = np.arange(25, 25 + n)
         fitall = np.column_stack((positions, fit, fit2))
         if smooth:
-            fitall = pd.DataFrame(fitall, columns=["position", "C0S_score_norm", "C0S_score_unnorm"])
+            fitall = pd.DataFrame(fitall, columns=["position", "C0S_norm", "C0S_unnorm"])
         else:
-            fitall = pd.DataFrame(fitall, columns=["position", "C0_score_norm", "C0_score_unnorm"])
+            fitall = pd.DataFrame(fitall, columns=["position", "C0_norm", "C0_unnorm"])
         fitall = fitall.astype({"position": int})
         fitall.to_csv(outputbase+"_cycle_"+chrom+".txt", index = False)
         print("Output file: "+outputbase+"_cycle_"+chrom+".txt", flush=True)
