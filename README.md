@@ -141,6 +141,58 @@ The predicted C-scores will be saved into two files, one with `_C0S_unnorm.txt` 
 
 For any input sequence, DNAcycP2 predicts the C-score for every 50 bp. Regardless of the input sequence format the first C-score in the output file corresponds to the sequence from position 1-50, second for 2-51 and so forth.
 
+
+### Example 3 (Single Sequence):
+
+If you want the predict C-scores for a single sequence, you can follow the same protocol as Example 1 or 2, depending on the input format. We have included two example files representing the same 1000bp stretch of S. Cerevisiae sacCer3 Chromosome I (1:1000) in .fasta and .txt format.
+
+First, we will consider the .fasta format:
+
+```bash
+dnacycp2-cli -f -s ./data/raw/ex3_single_seq.fasta ./data/raw/ex3_fasta_smooth
+dnacycp2-cli -f ./data/raw/ex3_single_seq.fasta ./data/raw/ex3_fasta_original
+```
+
+The output file containing DNAcycP2 predictions will be named as "ex3_fasta_smooth_cycle_1.txt" and the output file containing DNAcycP predictions will be named as "ex3_fasta_original_cycle_1.txt".
+
+We can examine these files, respectively, using the following commands:
+
+```bash
+less data/raw/ex3_fasta_smooth_cycle_1.txt
+less data/raw/ex3_fasta_original_cycle_1.txt
+```
+
+(Press 'q' to close the file)
+
+In each of these, we can scroll through the predictions to find any specific areas of interest where the first column will be the position in the sequence (for example, row 1/position 25 corresponds to base pairs 1-50 of the sequence), the second column will be the normalized C-score, and the third column will be the unnormalized C-score.
+
+Next, we will consider the .txt format:
+
+```bash
+dnacycp2-cli -t -s ./data/raw/ex3_single_seq.txt ./data/raw/ex3_txt_smooth
+dnacycp2-cli -t ./data/raw/ex3_single_seq.txt ./data/raw/ex3_txt_original
+```
+
+The predicted C-scores will be saved into two files for each command (four total), we can examine them with the following commands:
+
+
+```bash
+less data/raw/ex3_txt_smooth_C0S_norm.txt
+less data/raw/ex3_txt_smooth_C0S_unnorm.txt
+less data/raw/ex3_txt_original_C0_norm.txt
+less data/raw/ex3_txt_original_C0_unnorm.txt
+```
+
+(Press 'q' to close the file)
+
+In each of these, we can scan through the predictions to find specific areas of interest. If, for example, we want to print the smooth (DNAcycP2) normalized predictions for only the first 100 bp of the sequence (corresponding to subsequences defined by positions [1,50], [2,51], ..., and [51-100]), we can use the following command:
+
+```bash
+cut -d ' ' -f 1-51 data/raw/ex3_txt_smooth_C0S_norm.txt
+```
+
+For each of these examples, the output files are also written to your local computer, so you can view/interact with them using whichever software you are comfortable with (e.g. Rstudio, VSCode, Notepad, etc.)
+
 ### Run prediction within Python interactive session
 
 ```python
