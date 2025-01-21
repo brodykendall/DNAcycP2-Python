@@ -11,31 +11,30 @@ TODO: Update citation when applicable
 
 ## What is DNAcycP2?
 
-**DNAcycP2**, short for **DNA** **cyc**lizablity **P**rediction v**2**, is a Python package for accurate, unbiased prediction of DNA intrinsic cyclizablity score. It was built upon a deep learning architecture with a hybrid of Inception and Residual network structure and an LSTM layer. DNAcycP2 is an updated version of DNAcycP, released by Li et al 2021 (see below). DNAcycP was trained based on loop-seq data from Basu et al 2021 (see below), while DNAcycP2 was trained based on smoothed predictions of this loop-seq data. The predicted score (for either DNAcycP or DNAcycP2), termed **C-score** achieves high accuracy compared to the experimentally measured cyclizablity score by loop-seq assay.
+**DNAcycP2**, short for **DNA** **cyc**lizability **P**rediction v**2**, is a Python package (R version is also available) developed for precise and unbiased prediction of DNA intrinsic cyclizability scores. This tool builds on a deep learning framework that integrates Inception and Residual network architectures with an LSTM layer, providing a robust and accurate prediction mechanism.
+
+DNAcycP2 is an updated version of the earlier **DNAcycP** tool released by Li et al. in 2021. While DNAcycP was trained on loop-seq data from Basu et al. (2021), DNAcycP2 improves upon it by training on smoothed predictions derived from this dataset. The predicted score, termed **C-score**, exhibits high accuracy when compared with experimentally measured cyclizability scores obtained from the loop-seq assay. This makes DNAcycP2 a valuable tool for researchers studying DNA mechanics and structure.
 
 ## Key differences between DNAcycP2 and DNAcycP
 
-Following the release of DNAcycP, it was discovered that the training data contained residual measurement bias, leading to biased predictions. To correct this bias in the data, we employed a data augmentation + periodic smoothing approach to generate new, unbiased estimates of intrinsic DNA cyclizability for each sequence in the original training dataset. We then trained a new model on the unbiased data with architecture identical to that of DNAcycP, named DNAcycP2. More details on this process can be found in the following paper: (CITATION).
+Following the release of DNAcycP, it was found that the intrinsic cyclizability scores derived from Basu et al. (2021) retained residual bias from the biotin effect, resulting in inaccuracies (Kendall et al., 2025). To address this, we employed a data augmentation + moving average smoothing method to produce unbiased estimates of intrinsic DNA cyclizability for each sequence in the original training dataset. A new model, trained on this corrected data but using the same architecture as DNAcycP, was developed, resulting in DNAcycP2. This version also introduces improved computational efficiency through parallelization options. Further details are available in Kendall et al. (2025).
 
-TODO: fill in citation above
+To demonstrate the differences, we compared predictions from DNAcycP and DNAcycP2 in a yeast genomic region at base-pair resolution (Figure 1). The predicted biotin-dependent scores ($\tilde C_{26}$, $\tilde C_{29}$, and $ \tilde C_{31}$, model trained separately) show 10-bp periodic oscillations due to biotin biases, each with distinct phases. DNAcycP's predictions improved over the biotin-dependent scores, while still show substantial
+local fluctuations likely caused by residual bias in the training data (the called intrinsic cyclizability score $\hat C_0$ from Basu et al. 2021). In contrast, DNAcycP2, trained on corrected intrinsic cyclizability scores, produces much smoother local-scale predictions, indicating a further improvement in removing the biotin bias.
 
-Previously, the measurement bias introduced by the location of the biotin tether was not adequately accounted for. By employing data augmentation and smoothing with a moving average approach over the length of 1 full helical repeat at 1bp resolution in the genome, we can remove this bias while still maintaining high resolution, accurate estimates of intrinsic cyclizability.
-
+The DNAcycP2 package retains all prediction functions from the original DNAcycP. The improved prediction model, based on smoothed data, can be accessed using the argument smooth=TRUE in the main function (see usage below).
 ![Visualization of difference between DNAcycP2 and DNAcycP.](./figures/Figure7.png)
 
 ## Available formats of DNAcycP2 and DNAcycP
 
-DNAcycP2 is available in three formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, a standalone Python package avilable for free download from https://github.com/jipingw/DNAcycP2, and an R package available for free download from https://github.com/jipingw/dnacycp2-R.
+DNAcycP2 is available in three formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, a standalone Python package avilable for free download from https://github.com/jipingw/DNAcycP2-Python, and a new R package available for free download from bioconductor (https://github.com/jipingw/DNAcycP2). DNAcycP2 R package is a wrapper of its Python version, both generate the same prediction results.
 
-TODO: update web server - possible selection on server of which model to use?
-
-DNAcycP is still available in its two original formats: A web server available at http://DNAcycP.stats.northwestern.edu for real-time prediction and visualization of C-score up to 20K bp, and a standalone Python package available for free download from https://github.com/jipingw/DNAcycP
+DNAcycP Python package is still available for free download from https://github.com/jipingw/DNAcycP.
+As DNAcycP2 include all functionalities of DNAcycP, users can generate all DNAcycP results using DNAcycP2.
 
 ## Architecture of DNAcycP2
 
-The core of DNAcycP2 is a deep learning architecture mixed with an Inception-ResNet structure and an LSTM layer (IR+LSTM, Fig 1b) that processes the sequence and its reverse complement separately, the results from which are averaged and detrended to reach the predicted intrinsic score. (Fig 1a).
-
-IR+LSTM starts with a convolutional layer for dimension reduction such that the encoded sequence space is reduced from 2D to 1D. The output is fed into an inception module that contains two parallel branches, each having two sequentially connected convolutional layers with branch-specific kernels to capture sequence features of different scale. The first branch has kernel dimension 3x1 for both layers and the second has kernel dimension 11x1 and 21x1 sequentially. The output of the inception module is combined by concatenation and added back to the input of the inception module to form a short circuit or residual network. Finally, the IR+LSTM concludes with a dense layer to predict output with linear activation function. 
+The core of DNAcycP2 is a deep learning architecture mixed with an Inception-ResNet structure and an LSTM layer (IR+LSTM, Fig 2) that processes the sequence and its reverse complement separately, the results from which are averaged and detrended to reach the predicted intrinsic score. 
 
 ![A diagram of DNAcycP2.](./figures/Figure1.png)
 
@@ -83,6 +82,8 @@ source env/bin/activate test
 
 ## Usage
 
+### Main Function
+
 DNAcycP2 supports the input sequence in two formats: FASTA format (with sequence name line beginning with “>”) or plain TXT format. Unlike in the web server version where only one sequence is allowed in input for prediction, the Python package allows multiple sequences in the same input file. In particular for the TXT format, each line (can be of different length) in the file is regarded as one input sequence for prediction, however the computation is significantly more efficient when every sequence has length exactly 50bp. 
 
 The main function in DNAcycP2 is `dnacycp2-cli`, which is called through one of the following lines:
@@ -101,9 +102,21 @@ where
   * `-L <chunk_length>`: is the length of sequence that a given core will be predicting on at any given time (default 100000; only applicable with `-f`)
   * `-n <num_cores>`: is the number of cores to be used in parallel (default 1 - no parallelization; only applicable with `-f`)
 
-The `-f` setting (FASTA format) is designed for larger files, so it has added parallelization capability. To utilize this capability, specify the number of cores to be greater than 1 using the `n_cores` argument (default 1 - no parallelization). You can also specify the length of the sequence that each core will predict on at a given time using the `chunk_length` argument (default 100000).
+### Selecting the Prediction Model
 
-For reference, on a personal computer (16 Gb RAM, M1 chip with 8-core CPU), prediction at full parallelization directly on the yeast genome FASTA file completes in 12 minutes, and on the hg38 human genome Chromosome I FASTA file in just over 4 hours. In our experience, selection of parallelization parameters (-L and -n) has little affect when making predictions on a personal computer, but if using the package on a high-performance compute cluster, prediction time should decrease as the number of cores increases. If you do run into memory issues, we suggest first reducing -L
+Use the `-s` argument to specify the prediction model:
+
+- **`-s`**: DNAcycP2 (trained on smoothed data, recommended).
+- **Otherwise**: DNAcycP (trained on original data).
+
+### Parallelization with `-f`
+
+The `-f` setting (FASTA format) is designed for handling larger files and supports parallelization. To enable parallelization, use the following arguments:
+
+- **`-n`**: Number of cores to use (default: 1).
+- **`-L`**: Sequence length (in bp) each core processes at a time (default: 100,000).
+
+For reference, on a personal computer (16 Gb RAM, M1 chip with 8-core CPU), prediction at full parallelization directly on the yeast genome FASTA file completes in 12 minutes, and on the hg38 human genome Chromosome I FASTA file in just over 4 hours. In our experience, selection of parallelization parameters (`-L` and `-n`) has little affect when making predictions on a personal computer, but if using the package on a high-performance compute cluster, prediction time should decrease as the number of cores increases. If you do run into memory issues, we suggest first reducing `-L`.
 
 ### Example 1:
 
